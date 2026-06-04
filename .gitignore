@@ -1,0 +1,24 @@
+postman.tar.gz
+*.tar.gz
+
+# dependencies
+node_modules/
+
+# environment variables
+.env
+
+# prisma generated files
+generated/
+
+# logs
+*.log
+
+# OS files
+.DS_Store
+
+# editor
+.vscode/
+
+# build files
+dist/
+build/
