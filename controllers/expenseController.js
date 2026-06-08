@@ -1,78 +1,100 @@
-const expenses = []
+const prisma = require("../config/prisma");
 
-const getExpenses =(req,res) => {
-    res.json(expenses);
-}
+const getExpenses = async (req, res) => {
+    try {
+        const expenses = await prisma.expense.findMany();
 
-const addExpense = (req, res) => {
-    const { title, amount } = req.body;
-
-    if (!title || amount == null) {
-        return res.status(400).json({
-            message: "Title and amount are required"
+        res.status(200).json(expenses);
+    } catch (err) {
+        res.status(500).json({
+            message: err.message
         });
     }
-
-    if (amount <= 0) {
-        return res.status(400).json({
-            message: "Amount must be positive"
-        });
-    }
-
-    const expense = {
-        id: Date.now(),
-        title,
-        amount
-    };
-
-    expenses.push(expense);
-
-    res.status(201).json({
-        message: "Expense added successfully",
-        data: expense
-    });
 };
 
-const deleteExpense = (req, res) => {
+const addExpense = async (req, res) => {
+    try {
+        const { title, amount, category } = req.body;
 
-    const id = Number(req.params.id);
+        if (!title || amount == null || !category) {
+            return res.status(400).json({
+                message: "Title, amount and category are required"
+            });
+        }
 
-    const filteredExpenses = expenses.filter((expense) => {
-        return expense.id !== id;
-    });
+        const expense = await prisma.expense.create({
+            data: {
+                title,
+                amount: Number(amount),
+                category
+            }
+        });
 
-    expenses.length = 0;
+        res.status(201).json({
+            message: "Expense added successfully",
+            data: expense
+        });
 
-    expenses.push(...filteredExpenses);
-
-    res.json({
-        message: "Expense deleted successfully"
-    });
-
-};
-
-const updateExpense = (req,res)=>{
-    const id = Number(req.params.id);
-    const expense = expenses.find(expense=>expense.id===id);
-
-    if(!expense){
-        return res.status(404).json({
-            message:"Expense not found"
+    } catch (err) {
+        res.status(500).json({
+            message: err.message
         });
     }
+};
 
-    expense.title = req.body.title;
-    expense.amount = req.body.amount;
+const updateExpense = async (req, res) => {
+    try {
+        const id = Number(req.params.id);
 
-    res.json({
-        message: "Expense updated successfully",
-        data: expense
-    });
-}
+        const { title, amount, category } = req.body;
+
+        const expense = await prisma.expense.update({
+            where: {
+                id
+            },
+            data: {
+                title,
+                amount: Number(amount),
+                category
+            }
+        });
+
+        res.status(200).json({
+            message: "Expense updated successfully",
+            data: expense
+        });
+
+    } catch (err) {
+        res.status(500).json({
+            message: err.message
+        });
+    }
+};
+
+const deleteExpense = async (req, res) => {
+    try {
+        const id = Number(req.params.id);
+
+        await prisma.expense.delete({
+            where: {
+                id
+            }
+        });
+
+        res.status(200).json({
+            message: "Expense deleted successfully"
+        });
+
+    } catch (err) {
+        res.status(500).json({
+            message: err.message
+        });
+    }
+};
 
 module.exports = {
     getExpenses,
     addExpense,
-    deleteExpense,
-    updateExpense
+    updateExpense,
+    deleteExpense
 };
