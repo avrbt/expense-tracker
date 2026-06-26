@@ -1,16 +1,15 @@
-const express = require("express");
+require("dotenv").config();
 
+const express = require("express");
 
 const app = express();
 
-const authRoutes = require("./routes/authRoutes");
-
-app.use("/auth", authRoutes);
-
-const expenseRoutes = require("./routes/expenseRoutes");
-
 app.use(express.json());
 
+const authRoutes = require("./routes/authRoutes");
+const expenseRoutes = require("./routes/expenseRoutes");
+
+app.use("/auth", authRoutes);
 app.use("/expenses", expenseRoutes);
 
 app.get("/", (req, res) => {

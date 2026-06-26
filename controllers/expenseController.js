@@ -2,7 +2,11 @@ const prisma = require("../config/prisma");
 
 const getExpenses = async (req, res) => {
     try {
-        const expenses = await prisma.expense.findMany();
+        const expenses = await prisma.expense.findMany({
+    where: {
+        userId: req.user.id
+    }
+});
 
         res.status(200).json(expenses);
     } catch (err) {
@@ -23,12 +27,13 @@ const addExpense = async (req, res) => {
         }
 
         const expense = await prisma.expense.create({
-            data: {
-                title,
-                amount: Number(amount),
-                category
-            }
-        });
+    data: {
+        title,
+        amount: Number(amount),
+        category,
+        userId: req.user.id
+    }
+});
 
         res.status(201).json({
             message: "Expense added successfully",
@@ -46,9 +51,28 @@ const updateExpense = async (req, res) => {
     try {
         const id = Number(req.params.id);
 
+        if (isNaN(id)) {
+            return res.status(400).json({
+                message: "Invalid ID parameter"
+            });
+        }
+
+        const expense = await prisma.expense.findFirst({
+            where: {
+                id,
+                userId: req.user.id
+            }
+        });
+
+        if (!expense) {
+            return res.status(404).json({
+                message: "Expense not found"
+            });
+        }
+
         const { title, amount, category } = req.body;
 
-        const expense = await prisma.expense.update({
+        const updatedExpense = await prisma.expense.update({
             where: {
                 id
             },
@@ -61,7 +85,7 @@ const updateExpense = async (req, res) => {
 
         res.status(200).json({
             message: "Expense updated successfully",
-            data: expense
+            data: updatedExpense
         });
 
     } catch (err) {
@@ -74,6 +98,25 @@ const updateExpense = async (req, res) => {
 const deleteExpense = async (req, res) => {
     try {
         const id = Number(req.params.id);
+
+        if (isNaN(id)) {
+            return res.status(400).json({
+                message: "Invalid ID parameter"
+            });
+        }
+
+        const expense = await prisma.expense.findFirst({
+            where: {
+                id,
+                userId: req.user.id
+            }
+        });
+
+        if (!expense) {
+            return res.status(404).json({
+                message: "Expense not found"
+            });
+        }
 
         await prisma.expense.delete({
             where: {

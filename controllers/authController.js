@@ -6,6 +6,12 @@ const register = async (req, res) => {
     try {
         const { email, password } = req.body;
 
+        if (!email || !password) {
+            return res.status(400).json({
+                message: "Email and password are required"
+            });
+        }
+
         const existingUser = await prisma.user.findUnique({
             where: { email }
         });
@@ -44,6 +50,12 @@ const login = async (req, res) => {
     try {
         const { email, password } = req.body;
 
+        if (!email || !password) {
+            return res.status(400).json({
+                message: "Email and password are required"
+            });
+        }
+
         const user = await prisma.user.findUnique({
             where: { email }
         });
@@ -70,7 +82,7 @@ const login = async (req, res) => {
                 id: user.id,
                 email: user.email
             },
-            "mysecretkey",
+            process.env.JWT_SECRET || "mysecretkey",
             {
                 expiresIn: "7d"
             }
