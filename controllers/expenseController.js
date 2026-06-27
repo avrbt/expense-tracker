@@ -57,10 +57,9 @@ const updateExpense = async (req, res) => {
             });
         }
 
-        const expense = await prisma.expense.findFirst({
+        const expense = await prisma.expense.findUnique({
             where: {
-                id,
-                userId: req.user.id
+                id
             }
         });
 
@@ -70,17 +69,32 @@ const updateExpense = async (req, res) => {
             });
         }
 
+        if (expense.userId !== req.user.id) {
+            return res.status(403).json({
+                message: "You are not authorized to update this expense"
+            });
+        }
+
         const { title, amount, category } = req.body;
+
+        const updateData = {};
+        if (title !== undefined) updateData.title = title;
+        if (amount !== undefined) {
+            const parsedAmount = Number(amount);
+            if (isNaN(parsedAmount)) {
+                return res.status(400).json({
+                    message: "Amount must be a number"
+                });
+            }
+            updateData.amount = parsedAmount;
+        }
+        if (category !== undefined) updateData.category = category;
 
         const updatedExpense = await prisma.expense.update({
             where: {
                 id
             },
-            data: {
-                title,
-                amount: Number(amount),
-                category
-            }
+            data: updateData
         });
 
         res.status(200).json({
@@ -105,16 +119,21 @@ const deleteExpense = async (req, res) => {
             });
         }
 
-        const expense = await prisma.expense.findFirst({
+        const expense = await prisma.expense.findUnique({
             where: {
-                id,
-                userId: req.user.id
+                id
             }
         });
 
         if (!expense) {
             return res.status(404).json({
                 message: "Expense not found"
+            });
+        }
+
+        if (expense.userId !== req.user.id) {
+            return res.status(403).json({
+                message: "You are not authorized to delete this expense"
             });
         }
 
