@@ -154,9 +154,48 @@ const deleteExpense = async (req, res) => {
     }
 };
 
+const getExpenseStats = async (req, res) => {
+    try {
+        const stats = await prisma.expense.aggregate({
+            where: {
+                userId: req.user.id
+            },
+            _count: {
+                id: true
+            },
+            _sum: {
+                amount: true
+            },
+            _avg: {
+                amount: true
+            },
+            _max: {
+                amount: true
+            },
+            _min: {
+                amount: true
+            }
+        });
+
+        res.status(200).json({
+            totalTransactions: stats._count.id || 0,
+            totalSpent: stats._sum.amount || 0,
+            averageExpense: stats._avg.amount || 0,
+            highestExpense: stats._max.amount || 0,
+            lowestExpense: stats._min.amount || 0
+        });
+
+    } catch (err) {
+        res.status(500).json({
+            message: err.message
+        });
+    }
+};
+
 module.exports = {
     getExpenses,
     addExpense,
     updateExpense,
-    deleteExpense
+    deleteExpense,
+    getExpenseStats
 };

@@ -7,10 +7,12 @@ const {
     getExpenses,
     addExpense,
     deleteExpense,
-    updateExpense
+    updateExpense,
+    getExpenseStats
 } = require("../controllers/expenseController");
 
 
+router.get("/stats", authMiddleware, getExpenseStats);
 router.get("/", authMiddleware, getExpenses);
 router.post("/", authMiddleware, addExpense);
 router.put("/:id", authMiddleware, updateExpense);
